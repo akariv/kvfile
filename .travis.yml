@@ -4,12 +4,14 @@ language: python
 python:
 - 3.6
 env:
+  matrix:
+  - TOXENV="py36-sqlite" SPEEDUP=no DEPLOY=yes
+  - TOXENV="py36-plyvel" SPEEDUP=yes DEPLOY=no
   global:
-  - TOXENV="py${PYTHON_VERSION//./}"
   - LANG=en_US.UTF-8
 install:
 - sudo apt-get install libleveldb-dev libleveldb1
-- make install-speedup
+- if [ "${SPEEDUP}" == yes ]; then make install-speedup; else make install; fi
 - pip install coveralls
 script:
 - make lint
@@ -22,5 +24,6 @@ deploy:
   distributions: sdist bdist_wheel
   on:
     tags: true
+    condition: $DEPLOY = yes
   password:
     secure: eJLQhSZzmqDG4gzkqJX853rClY8UOY5W9x/8g9dSKN8Yq//ds4ZlrVFX0hXLGUXOhNXO2PSArMaqYEvGBH+ol5YmcIiw3MAK5N2NXAONjoDmVMDMBwegjIhsFi2SlwKjehe6OCZUG7nuEftI1RC5Y1BvhLVcuexWWD7O7xnRS+KiFbISGj7zZM2CeYjKKZal5T2yuB94LdylLmPb/rdYhKeZ+CAjjEOIERaUh2jpNhcevjtuD0jUeGz/iBp+IuxFEoPZyeTksjxe4fo4QO31wHWe2UmajJ8metEsgMGmVvgIdBVuiicLBNSBWuCvIkBh8z3ob8jxC4RbrV6AOpRcPU0litlYYzx7EFobSGCsgi+2uke0B3bhJ/ootUgylhrxyyxtwTK9YxsVvcHmXKt/VMR4T+fESEG9NyBd5wM0sudz6T4g0WdgdfcgmQLaEwizhUyY4ZSVorVrGrUkUtJJvA+D68IP0X1EJ9glN8ldl1a8BBBFvPxf/mQ/AVJORT2PIf78baYut+n6FzjcQr5UQ+1yahfadB7Jqc8axkRcwiKOv6UTc8X+WkRYbMYOyatAx3oJrkXj2VLX4bel7okDZ31pnVlfXorlgl6YV5rmY2I76hfVG/psmZRHE6RBiqeEAAMbvHBBfl4C8tWGa6iIf+iUbs/316DmAcWo1TVsJeg=

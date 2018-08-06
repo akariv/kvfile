@@ -1,6 +1,7 @@
 import datetime
 import decimal
 
+
 def test_sanity():
     from kvfile import KVFile
 
@@ -21,5 +22,8 @@ def test_sanity():
     for k, v in data.items():
         assert kv.get(k) == v
 
-    assert sorted(kv.keys()) == sorted(data.keys())
-    assert sorted(kv.items()) == sorted(data.items())
+    assert list(kv.keys()) == sorted(data.keys())
+    assert list(kv.items()) == sorted(data.items())
+
+    assert list(kv.keys(reverse=True)) == sorted(data.keys(), reverse=True)
+    assert list(kv.items(reverse=True)) == sorted(data.items(), reverse=True)

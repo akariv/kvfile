@@ -12,6 +12,8 @@ Internally will use the faster `leveldb` as a storage backend or `sqlite3` as fa
 The API should feel familiar to anyone working with Python.
 It exposes `get`, `keys` and `items` for reading from the DB, and `set` for setting a value in the DB.
 
+### Initializing
+
 ```python
 import datetime
 import decimal
@@ -19,7 +21,11 @@ import decimal
 from kvfile import KVFile
 
 kv = KVFile()
+```
 
+### Setting values
+
+```python
 kv.set('s', 'value')
 kv.set('i', 123)
 kv.set('d', datetime.datetime.fromtimestamp(12325))
@@ -27,7 +33,11 @@ kv.set('n', decimal.Decimal('1234.56'))
 kv.set('ss', set(range(10)))
 kv.set('o', dict(d=decimal.Decimal('1234.58'), 
                  n=datetime.datetime.fromtimestamp(12325)))
+```
 
+### Getting values
+
+```python
 assert kv.get('s') == 'value'
 assert kv.get('i') == 123
 assert kv.get('d') == datetime.datetime.fromtimestamp(12325)
@@ -35,9 +45,17 @@ assert kv.get('n') == decimal.Decimal('1234.56')
 assert kv.get('ss') == set(range(10))
 assert kv.get('o') == dict(d=decimal.Decimal('1234.58'), 
                            n=datetime.datetime.fromtimestamp(12325))
+```
 
-assert sorted(kv.keys()) == ['d', 'i', 'n', 'o', 's', 'ss']
-assert sorted(kv.items()) == [
+### Listing values
+
+`keys()` and `items()` methods return a generator yielding the values for efficient stream processing.
+
+The returned data is sorted ascending (by default) based on the keys
+
+```python
+assert list(kv.keys()) == ['d', 'i', 'n', 'o', 's', 'ss']
+assert list(kv.items()) == [
   ('d', datetime.datetime.fromtimestamp(12325)), 
   ('i', 123), 
   ('n', decimal.Decimal('1234.56')), 
@@ -47,6 +65,9 @@ assert sorted(kv.items()) == [
   ('ss', {0, 1, 2, 3, 4, 5, 6, 7, 8, 9})
 ]
 ```
+
+Set the `reverse` argument to True for the `keys()` and `items()` methods to sort in descending order.
+
 
 ## Installing leveldb
 
