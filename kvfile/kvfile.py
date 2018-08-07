@@ -39,15 +39,17 @@ class SqliteDB(object):
                                 (key, value))
         self.db.commit()
 
-    def keys(self):
+    def keys(self, reverse=False):
         cursor = self.db.cursor()
-        keys = cursor.execute('''SELECT key FROM d ORDER BY key ASC''')
+        direction = 'DESC' if reverse else 'ASC'
+        keys = cursor.execute('''SELECT key FROM d ORDER BY key ''' + direction)
         for key, in keys:
             yield key
 
-    def items(self):
+    def items(self, reverse=False):
         cursor = self.db.cursor()
-        items = cursor.execute('''SELECT key, value FROM d ORDER BY key ASC''')
+        direction = 'DESC' if reverse else 'ASC'
+        items = cursor.execute('''SELECT key, value FROM d ORDER BY key ''' + direction)
         for key, value in items:
             yield key, self.serializer.deserialize(value)
 
@@ -71,12 +73,12 @@ class LevelDB(object):
         key = key.encode('utf8')
         self.db.put(key, value)
 
-    def keys(self):
-        for key, value in self.db:
+    def keys(self, reverse=False):
+        for key, value in self.db.iterator(reverse=reverse):
             yield key.decode('utf8')
 
-    def items(self):
-        for key, value in self.db:
+    def items(self, reverse=False):
+        for key, value in self.db.iterator(reverse=reverse):
             yield (key.decode('utf8'),
                    self.serializer.deserialize(value.decode('utf8')))
 
