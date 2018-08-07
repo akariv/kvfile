@@ -27,3 +27,18 @@ def test_sanity():
 
     assert list(kv.keys(reverse=True)) == sorted(data.keys(), reverse=True)
     assert list(kv.items(reverse=True)) == sorted(data.items(), reverse=True)
+
+def test_insert():
+    from kvfile import KVFile
+    kv = KVFile()
+    kv.insert(((str(i), ':{}'.format(i)) for i in range(50000)))
+    assert len(list(kv.keys())) == 50000
+    assert len(list(kv.items())) == 50000
+    assert kv.get('49999') == ':49999'
+
+    kv.insert(((str(i), ':{}'.format(i)) for i in range(50000, 100000)), batch_size=40000)
+    assert len(list(kv.items())) == 100000
+
+    kv.insert(((str(i), ':{}'.format(i)) for i in range(100000, 100002)), batch_size=1)
+    kv.insert(((str(i), ':{}'.format(i)) for i in range(100002, 100005)), batch_size=0)
+    assert len(list(kv.items())) == 100005
