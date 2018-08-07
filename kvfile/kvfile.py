@@ -39,6 +39,24 @@ class SqliteDB(object):
                                 (key, value))
         self.db.commit()
 
+    def insert(self, key_value_iterator, batch_size=1000):
+        if batch_size == 1:
+            for key, value in key_value_iterator:
+                self.set(key, value)
+        else:
+            batch = []
+
+            def flush(force=False):
+                if len(batch) > 0 and (force or (batch_size and len(batch) >= batch_size)):
+                    self.cursor.executemany('''INSERT INTO d VALUES (?, ?)''', batch)
+                    self.db.commit()
+                    batch.clear()
+            for key, value in key_value_iterator:
+                value = self.serializer.serialize(value).encode()
+                batch.append((key, value))
+                flush()
+            flush(force=True)
+
     def keys(self, reverse=False):
         cursor = self.db.cursor()
         direction = 'DESC' if reverse else 'ASC'
@@ -72,6 +90,27 @@ class LevelDB(object):
         value = self.serializer.serialize(value).encode('utf8')
         key = key.encode('utf8')
         self.db.put(key, value)
+
+    def insert(self, key_value_iterator, batch_size=1000):
+        if batch_size == 1:
+            for key, value in key_value_iterator:
+                self.set(key, value)
+        else:
+            batch = []
+
+            def flush(force=False):
+                if len(batch) > 0 and (force or (batch_size and len(batch) >= batch_size)):
+                    write_batch = self.db.write_batch()
+                    for key, value in batch:
+                        write_batch.put(key, value)
+                    write_batch.write()
+                    batch.clear()
+            for key, value in key_value_iterator:
+                value = self.serializer.serialize(value).encode('utf8')
+                key = key.encode('utf8')
+                batch.append((key, value))
+                flush()
+            flush(True)
 
     def keys(self, reverse=False):
         for key, value in self.db.iterator(reverse=reverse):

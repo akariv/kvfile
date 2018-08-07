@@ -68,6 +68,20 @@ assert list(kv.items()) == [
 
 Set the `reverse` argument to True for the `keys()` and `items()` methods to sort in descending order.
 
+### Bulk inserting data
+
+The SQLite DB backend can be very slow when bulk inserting data. You can use the insert method to insert efficiently in bulk.
+
+```python
+kv.insert(((str(i), ':{}'.format(i)) for i in range(50000)))
+```
+
+The batch size is 1000 by default, you should modify it depending on the size of your data and available memory.
+
+```python
+kv.insert(((str(i), ':{}'.format(i)) for i in range(50000)), batch_size=40000)
+```
+
 
 ## Installing leveldb
 
