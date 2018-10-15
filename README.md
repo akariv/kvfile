@@ -82,6 +82,12 @@ The batch size is 1000 by default, you should modify it depending on the size of
 kv.insert(((str(i), ':{}'.format(i)) for i in range(50000)), batch_size=40000)
 ```
 
+If you are inserting data from a generator and need to use the inserted data, use `insert_generator` method:
+
+```python
+for key, value in kv.insert_generator(((str(i), ':{}'.format(i)) for i in range(50)), batch_size=10):
+    print(key, value)
+```
 
 ## Installing leveldb
 

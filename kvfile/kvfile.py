@@ -1,4 +1,5 @@
 import tempfile
+from collections import deque
 
 try:
     import plyvel as DB_ENGINE
@@ -40,8 +41,12 @@ class SqliteDB(object):
         self.db.commit()
 
     def insert(self, key_value_iterator, batch_size=1000):
+        deque(self.insert_generator(key_value_iterator, batch_size))
+
+    def insert_generator(self, key_value_iterator, batch_size=1000):
         if batch_size == 1:
             for key, value in key_value_iterator:
+                yield key, value
                 self.set(key, value)
         else:
             batch = []
@@ -52,6 +57,7 @@ class SqliteDB(object):
                     self.db.commit()
                     batch.clear()
             for key, value in key_value_iterator:
+                yield key, value
                 value = self.serializer.serialize(value).encode()
                 batch.append((key, value))
                 flush()
@@ -92,8 +98,12 @@ class LevelDB(object):
         self.db.put(key, value)
 
     def insert(self, key_value_iterator, batch_size=1000):
+        deque(self.insert_generator(key_value_iterator, batch_size))
+
+    def insert_generator(self, key_value_iterator, batch_size=1000):
         if batch_size == 1:
             for key, value in key_value_iterator:
+                yield key, value
                 self.set(key, value)
         else:
             batch = []
@@ -106,6 +116,7 @@ class LevelDB(object):
                     write_batch.write()
                     batch.clear()
             for key, value in key_value_iterator:
+                yield key, value
                 value = self.serializer.serialize(value).encode('utf8')
                 key = key.encode('utf8')
                 batch.append((key, value))
