@@ -114,6 +114,8 @@ class LevelDB(object):
                     for key, value in batch:
                         write_batch.put(key, value)
                     write_batch.write()
+                    write_batch.clear()
+                    del write_batch
                     batch.clear()
             for key, value in key_value_iterator:
                 yield key, value
