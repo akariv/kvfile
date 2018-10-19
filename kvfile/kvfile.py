@@ -41,7 +41,7 @@ class SqliteDB(object):
         self.db.commit()
 
     def insert(self, key_value_iterator, batch_size=1000):
-        deque(self.insert_generator(key_value_iterator, batch_size))
+        deque(self.insert_generator(key_value_iterator, batch_size), maxlen=0)
 
     def insert_generator(self, key_value_iterator, batch_size=1000):
         if batch_size == 1:
@@ -98,7 +98,7 @@ class LevelDB(object):
         self.db.put(key, value)
 
     def insert(self, key_value_iterator, batch_size=1000):
-        deque(self.insert_generator(key_value_iterator, batch_size))
+        deque(self.insert_generator(key_value_iterator, batch_size), maxlen=0)
 
     def insert_generator(self, key_value_iterator, batch_size=1000):
         if batch_size == 1:
