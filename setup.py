@@ -46,6 +46,7 @@ setup(
     },
     zip_safe=False,
     long_description=README,
+    long_description_content_type='text/markdown',
     description='Simple File-based KV-Store',
     author='Adam Kariv',
     author_email='adam.kariv@gmail.com',
