@@ -54,3 +54,28 @@ def test_insert_generator():
     assert len(list(kv.keys())) == 50
     assert len(list(kv.items())) == 50
     assert kv.get('49') == ':49'
+
+def test_cached():
+    from kvfile import CachedKVFile
+    from random import shuffle
+    kv = CachedKVFile()
+    s = 5000
+    data = [
+        ('%06d' % i, {'a': i}) for i in range(s)
+    ]
+    for k, v in data:
+        kv.set(k, v)
+    for i in range(3):
+        shuffle(data)
+        for k, v in data[:(s//2)]:
+            kv.set(k, v)
+        shuffle(data)
+        for k, v in data[:(s//2)]:
+            assert kv.get(k) == v
+    items = list(kv.items())
+    items = sorted(items)
+    data = sorted(data)
+    assert items == data
+    keys = sorted(list(kv.keys()))
+    assert keys == [x[0] for x in data]
+    

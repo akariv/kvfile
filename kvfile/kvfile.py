@@ -40,6 +40,11 @@ class SqliteDB(object):
                                 (key, value))
         self.db.commit()
 
+    def delete(self, key):
+        self.cursor.execute('''DELETE FROM d WHERE key=?''',
+                            (key,)).fetchone()
+        self.db.commit()
+
     def insert(self, key_value_iterator, batch_size=1000):
         deque(self.insert_generator(key_value_iterator, batch_size), maxlen=0)
 
@@ -96,6 +101,10 @@ class LevelDB(object):
         value = self.serializer.serialize(value).encode('utf8')
         key = key.encode('utf8')
         self.db.put(key, value)
+
+    def delete(self, key):
+        key = key.encode('utf8')
+        self.db.delete(key)
 
     def insert(self, key_value_iterator, batch_size=1000):
         deque(self.insert_generator(key_value_iterator, batch_size), maxlen=0)

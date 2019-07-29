@@ -16,7 +16,8 @@ def read(*paths):
 PACKAGE = 'kvfile'
 NAME = PACKAGE.replace('_', '-')
 INSTALL_REQUIRES = [
-    'isodate'
+    'isodate',
+    'cachetools'
 ]
 SPEEDUP_REQUIRES = [
     'plyvel<1',
