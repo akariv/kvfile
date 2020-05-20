@@ -1,3 +1,4 @@
+import os
 import tempfile
 from collections import deque
 
@@ -14,12 +15,16 @@ from .serializer import JsonSerializer
 class SqliteDB(object):
 
     def __init__(self, serializer=JsonSerializer):
-        self.tmpfile = tempfile.NamedTemporaryFile()
+        self.tmpdir = tempfile.TemporaryDirectory()
+        filename = os.path.join(self.tmpdir.name, 'kvfile.db')
         self.serializer = serializer()
-        self.db = DB_ENGINE.connect(self.tmpfile.name)
+        self.db = DB_ENGINE.connect(filename)
         self.cursor = self.db.cursor()
         self.cursor.execute('''CREATE TABLE d (key text, value text)''')
         self.cursor.execute('''CREATE UNIQUE INDEX i ON d (key)''')
+
+    def __del__(self):
+        self.tmpdir.cleanup()
 
     def get(self, key):
         ret = self.cursor.execute('''SELECT value FROM d WHERE key=?''',
