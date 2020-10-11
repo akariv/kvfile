@@ -1,5 +1,6 @@
 import os
 import tempfile
+import warnings
 from collections import deque
 
 try:
@@ -24,7 +25,12 @@ class SqliteDB(object):
         self.cursor.execute('''CREATE UNIQUE INDEX i ON d (key)''')
 
     def __del__(self):
-        self.tmpdir.cleanup()
+        del self.cursor
+        del self.db
+        try:
+            self.tmpdir.cleanup()
+        except Exception as e:
+            warnings.warn('Failed to cleanup sqlite DB: {}'.format(e), Warning)
 
     def get(self, key):
         ret = self.cursor.execute('''SELECT value FROM d WHERE key=?''',
