@@ -15,20 +15,26 @@ from .serializer import JsonSerializer
 
 class SqliteDB(object):
 
-    def __init__(self, serializer=JsonSerializer):
-        self.tmpdir = tempfile.TemporaryDirectory()
-        filename = os.path.join(self.tmpdir.name, 'kvfile.db')
+    def __init__(self, serializer=JsonSerializer, filename=None):
+        self.tmpdir = None
+        if filename is None:
+            self.tmpdir = tempfile.TemporaryDirectory()
+            filename = os.path.join(self.tmpdir.name, 'kvfile.db')
         self.serializer = serializer()
         self.db = DB_ENGINE.connect(filename)
         self.cursor = self.db.cursor()
-        self.cursor.execute('''CREATE TABLE d (key text, value text)''')
-        self.cursor.execute('''CREATE UNIQUE INDEX i ON d (key)''')
+        try:
+            self.cursor.execute('''CREATE TABLE d (key text, value text)''')
+            self.cursor.execute('''CREATE UNIQUE INDEX i ON d (key)''')
+        except DB_ENGINE.OperationalError:
+            pass
 
     def __del__(self):
         del self.cursor
         del self.db
         try:
-            self.tmpdir.cleanup()
+            if self.tmpdir is not None:
+                self.tmpdir.cleanup()
         except Exception as e:
             warnings.warn('Failed to cleanup sqlite DB: {}'.format(e), Warning)
 
@@ -96,10 +102,15 @@ class SqliteDB(object):
 
 class LevelDB(object):
 
-    def __init__(self, serializer=JsonSerializer):
-        self.tmpdir = tempfile.TemporaryDirectory()
+    def __init__(self, serializer=JsonSerializer, filename=None):
+        if filename is None:
+            self.tmpdir = tempfile.TemporaryDirectory()
+            filename = self.tmpdir.name
         self.serializer = serializer()
-        self.db = DB_ENGINE.DB(self.tmpdir.name, create_if_missing=True)
+        self.db = DB_ENGINE.DB(filename, create_if_missing=True)
+
+    def __del__(self):
+        self.db.close()
 
     def get(self, key):
         ret = self.db.get(key.encode('utf8'))
