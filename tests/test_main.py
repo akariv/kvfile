@@ -1,6 +1,6 @@
 import datetime
 import decimal
-
+import pytest
 
 def test_sanity():
     from kvfile import KVFile
@@ -90,3 +90,13 @@ def test_filename():
     assert len(list(kv.keys())) == 50000
     assert len(list(kv.items())) == 50000
     assert kv.get('49999') == ':49999'
+
+def test_default():
+    from kvfile import KVFile
+    kv = KVFile()
+    kv.set('aaaa', 5)
+    assert kv.get('aaaa') == 5
+    assert kv.get('bbbb', default=6) == 6
+    with pytest.raises(KeyError):
+        kv.get('bbbb')
+        

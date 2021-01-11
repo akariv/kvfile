@@ -112,9 +112,11 @@ class LevelDB(object):
     def __del__(self):
         self.db.close()
 
-    def get(self, key):
+    def get(self, key, **kw):
         ret = self.db.get(key.encode('utf8'))
         if ret is None:
+            if 'default' in kw:
+                return kw['default']
             raise KeyError()
         else:
             return self.serializer.deserialize(ret.decode('utf8'))
