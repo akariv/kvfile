@@ -81,7 +81,7 @@ def test_cached():
     
 def test_filename():
     from kvfile import KVFile, db_kind
-    filename = 'bla.' + db_kind + '.db'
+    filename = 'bla.filename.' + db_kind + '.db'
     kv1 = KVFile(filename=filename)
     kv1.insert(((str(i), ':{}'.format(i)) for i in range(50000)))
     del kv1

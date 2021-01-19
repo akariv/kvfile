@@ -38,10 +38,12 @@ class SqliteDB(object):
         except Exception as e:
             warnings.warn('Failed to cleanup sqlite DB: {}'.format(e), Warning)
 
-    def get(self, key):
+    def get(self, key, **kw):
         ret = self.cursor.execute('''SELECT value FROM d WHERE key=?''',
                                   (key,)).fetchone()
         if ret is None:
+            if 'default' in kw:
+                return kw['default']
             raise KeyError()
         else:
             return self.serializer.deserialize(ret[0])
