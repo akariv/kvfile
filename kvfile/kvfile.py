@@ -30,8 +30,10 @@ class SqliteDB(object):
             pass
 
     def __del__(self):
-        del self.cursor
-        del self.db
+        if hasattr(self, 'cursor'):
+            del self.cursor
+        if hasattr(self, 'db'):
+            del self.db
         try:
             if self.tmpdir is not None:
                 self.tmpdir.cleanup()
@@ -112,7 +114,8 @@ class LevelDB(object):
         self.db = DB_ENGINE.DB(filename, create_if_missing=True)
 
     def __del__(self):
-        self.db.close()
+        if hasattr(self, 'db'):
+            self.db.close()
 
     def get(self, key, **kw):
         ret = self.db.get(key.encode('utf8'))
