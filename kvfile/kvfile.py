@@ -116,6 +116,7 @@ class LevelDB(object):
     def __del__(self):
         if hasattr(self, 'db'):
             self.db.close()
+            del self.db
 
     def get(self, key, **kw):
         ret = self.db.get(key.encode('utf8'))
@@ -164,13 +165,21 @@ class LevelDB(object):
             flush(True)
 
     def keys(self, reverse=False):
-        for key, value in self.db.iterator(reverse=reverse):
-            yield key.decode('utf8')
+        it = self.db.iterator(reverse=reverse)
+        try:
+            for key, _ in it:
+                yield key.decode('utf8')
+        finally:
+            del it
 
     def items(self, reverse=False):
-        for key, value in self.db.iterator(reverse=reverse):
-            yield (key.decode('utf8'),
-                   self.serializer.deserialize(value.decode('utf8')))
+        it = self.db.iterator(reverse=reverse)
+        try:
+            for key, value in it:
+                yield (key.decode('utf8'),
+                    self.serializer.deserialize(value.decode('utf8')))
+        finally:
+            del it
 
 
 KVFile = LevelDB if db_kind == 'LevelDB' else SqliteDB

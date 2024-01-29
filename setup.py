@@ -20,7 +20,7 @@ INSTALL_REQUIRES = [
     'cachetools'
 ]
 SPEEDUP_REQUIRES = [
-    'plyvel<1',
+    'plyvel',
 ]
 LINT_REQUIRES = [
     'pylama',
