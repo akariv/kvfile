@@ -7,10 +7,10 @@ from .serializer import SerializerBase
 class KVFileLevelDB(KVFileBase):
 
     def __init__(self, serializer: SerializerBase=None, location=None):
-        super().__init__(serializer, location)
+        super().__init__(serializer=serializer, location=location)
         self.db = plyvel.DB(self.dirname, create_if_missing=True)
 
-    def __del__(self):
+    def _close_db(self):
         if hasattr(self, 'db'):
             self.db.close()
             del self.db
@@ -26,7 +26,7 @@ class KVFileLevelDB(KVFileBase):
         key = key.encode('utf8')
         self.db.delete(key)
 
-    def keys(self, reverse=False) -> Iterator[str]:
+    def _keys(self, reverse=False) -> Iterator[str]:
         it = self.db.iterator(reverse=reverse)
         try:
             for key, _ in it:
@@ -52,5 +52,5 @@ class KVFileLevelDB(KVFileBase):
 
 
 class CachedKVFileLevelDB(CachedKVFile):
-    def __init__(self, serializer: SerializerBase=None, filename=None, size=CachedKVFile.DEFAULT_CACHE_SIZE):
-        super().__init__(KVFileLevelDB, serializer=serializer, filename=filename, size=size)
+    def __init__(self, serializer: SerializerBase=None, location=None, size=CachedKVFile.DEFAULT_CACHE_SIZE):
+        super().__init__(KVFileLevelDB, serializer=serializer, location=location, size=size)

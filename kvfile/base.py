@@ -22,8 +22,18 @@ class KVFileBase():
             self.filename = location
             self.dirname = location
         self.serializer = serializer or DefaultSerializer()
+        self.closed = False
+
+    def close(self):
+        if not self.closed:
+            self._close_db()
+            self.closed = True
+
+    def __del__(self):
+        self.close()
 
     def get(self, key: str, **kw) -> object:
+        assert not self.closed
         ret = self._get_db(key)
         if ret is None:
             if 'default' in kw:
@@ -33,16 +43,20 @@ class KVFileBase():
             return self.serializer.deserialize(ret)
 
     def set(self, key: str, value: object):
+        assert not self.closed
         value = self.serializer.serialize(value)
         self._set_db(key, value)
 
     def delete(self, key: str):
+        assert not self.closed
         self._del_db(key)
 
     def insert(self, key_value_iterator: KeyValueIterator, batch_size=DEFAULT_BATCH_SIZE):
+        assert not self.closed
         deque(self.insert_generator(key_value_iterator, batch_size), maxlen=0)
 
     def insert_generator(self, key_value_iterator: KeyValueIterator, batch_size=DEFAULT_BATCH_SIZE):
+        assert not self.closed
         if batch_size == 1:
             for key, value in key_value_iterator:
                 yield key, value
@@ -60,8 +74,13 @@ class KVFileBase():
                 self._set_db_batch(batch)
 
     def items(self, reverse=False) -> KeyValueIterator:
+        assert not self.closed
         for key, value in self._db_items(reverse):
             yield key, self.serializer.deserialize(value)
+
+    def keys(self, reverse=False) -> Iterator[str]:
+        assert not self.closed
+        return self._keys(reverse)
 
     # Implemented by subclasses:
     def _get_db(self, key: str) -> bytes:
@@ -76,9 +95,12 @@ class KVFileBase():
     def _db_items(self, reverse=False) -> KeySValueIterator:
         raise NotImplementedError()
 
+    def _close_db(self):
+        raise NotImplementedError()
+
     def _set_db_batch(self, batch: KeySValueIterator) -> None:
         for key, value in batch:
             self._set_db(key, value)
 
-    def keys(self, reverse=False) -> Iterator[str]:
+    def _keys(self, reverse=False) -> Iterator[str]:
         raise NotImplementedError()

@@ -13,7 +13,6 @@ class DBWriteOnEvictionLRUCache(cachetools.LRUCache):
 
     def popitem(self):
         key, value = super().popitem()
-        # print('popitem', key, value)
         if key in self.dirty_set:
             self.access_db()._set_db(key, value)
             self.dirty_set.discard(key)
@@ -24,16 +23,18 @@ class CachedKVFile(KVFileBase):
 
     DEFAULT_CACHE_SIZE = 10240
 
-    def __init__(self, kvfile_cls: KVFileBase=None, serializer: SerializerBase=None, filename=None, size=DEFAULT_CACHE_SIZE):
-        super().__init__(serializer, filename)
+    def __init__(self, kvfile_cls: KVFileBase=None, serializer: SerializerBase=None, location=None, size=DEFAULT_CACHE_SIZE):
+        super().__init__(serializer=serializer, location=location)
         self.dirty = set()
         self.cache = DBWriteOnEvictionLRUCache(self.db, self.dirty, size)
         self.kvfile_cls = kvfile_cls
         self._db = None
+        if location is not None:
+            self._db = self.db()
 
     def db(self):
         if self._db is None:
-            self._db = self.kvfile_cls(self.serializer, self.filename)
+            self._db = self.kvfile_cls(serializer=self.serializer, location=self.filename)
         return self._db
 
     def _get_db(self, key: str) -> bytes:
@@ -56,11 +57,16 @@ class CachedKVFile(KVFileBase):
             self.db()._del_db(key)
         self.dirty.discard(key)
 
-    def keys(self, reverse=False) -> Iterator[str]:
+    def _keys(self, reverse=False) -> Iterator[str]:
         if self._db is not None:
             self.flush()
-            return self.db().keys()
+            return self.db()._keys()
         return sorted(self.cache.keys(), reverse=reverse)
+
+    def _close_db(self):
+        if self._db is not None:
+            self.flush()
+            self.db()._close_db()
 
     def items(self, reverse=False):
         if self._db is not None:

@@ -99,20 +99,29 @@ def test_cached(KVFile, serializer, size):
     keys = sorted(list(kv.keys()))
     assert keys == [x[0] for x in data]
     
-@pytest.mark.parametrize(('KVFile', 'location'), [(KVFileLevelDB, 'test_temp/filename_leveldb_dummy'), (KVFileSQLite, 'test_temp/filename_sqlite_dummy.db')])
-@pytest.mark.parametrize('serializer', [PickleSerializer, JsonSerializer])
+@pytest.mark.parametrize(('KVFile', 'location'), [
+    (KVFileLevelDB, 'test_temp/filename_leveldb_dummy'),
+    (CachedKVFileLevelDB, 'test_temp/filename_c_leveldb_dummy'),
+    (KVFileSQLite, 'test_temp/filename_sqlite_dummy/db'),
+    (CachedKVFileSQLite, 'test_temp/filename_c_sqlite_dummy/db')
+])
+@pytest.mark.parametrize('serializer', [
+    PickleSerializer,
+    JsonSerializer
+])
 def test_filename(KVFile, location, serializer):
     import os
-    os.makedirs('test_temp', exist_ok=True)
+    os.makedirs(location, exist_ok=True)
 
     kv1 = KVFile(serializer(), location=location)
     kv1.insert(((str(i), ':{}'.format(i)) for i in range(50000)))
-    del kv1
+    kv1.close()
 
     kv = KVFile(serializer(), location=location)
     assert len(list(kv.keys())) == 50000
     assert len(list(kv.items())) == 50000
     assert kv.get('49999') == ':49999'
+    kv.close()
 
 @pytest.mark.parametrize('KVFile', [KVFileLevelDB, KVFileSQLite])
 @pytest.mark.parametrize('serializer', [PickleSerializer, JsonSerializer])

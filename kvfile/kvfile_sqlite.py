@@ -10,7 +10,7 @@ class KVFileSQLite(KVFileBase):
     BATCH_SIZE = 1000
 
     def __init__(self, serializer: SerializerBase=None, location=None):
-        super().__init__(serializer, location)
+        super().__init__(serializer=serializer, location=location)
         if not self.filename.endswith('.sqlite'):
             self.filename += '.sqlite'
         self.db = sqlite3.connect(self.filename)
@@ -22,11 +22,11 @@ class KVFileSQLite(KVFileBase):
             pass
         self._needs_commit = set()
 
-    def __del__(self):
-        self.db.commit()
-        if hasattr(self, 'cursor'):
-            del self.cursor
+    def _close_db(self):
         if hasattr(self, 'db'):
+            self.db.commit()
+            if hasattr(self, 'cursor'):
+                del self.cursor
             del self.db
 
     def _commitW(self, key):
@@ -65,7 +65,7 @@ class KVFileSQLite(KVFileBase):
         for key, value in items:
             yield key, value
 
-    def keys(self, reverse=False) -> Iterator[str]:
+    def _keys(self, reverse=False) -> Iterator[str]:
         self._commitR()
         cursor = self.db.cursor()
         direction = 'DESC' if reverse else 'ASC'
@@ -79,5 +79,5 @@ class KVFileSQLite(KVFileBase):
 
 
 class CachedKVFileSQLite(CachedKVFile):
-    def __init__(self, serializer: SerializerBase=None, filename=None, size=CachedKVFile.DEFAULT_CACHE_SIZE):
-        super().__init__(KVFileSQLite, serializer=serializer, filename=filename, size=size)
+    def __init__(self, serializer: SerializerBase=None, location=None, size=CachedKVFile.DEFAULT_CACHE_SIZE):
+        super().__init__(KVFileSQLite, serializer=serializer, location=location, size=size)
