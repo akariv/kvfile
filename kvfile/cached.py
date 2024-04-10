@@ -67,6 +67,7 @@ class CachedKVFile(KVFileBase):
         if self._db is not None:
             self.flush()
             self.db()._close_db()
+            self._db = None
 
     def items(self, reverse=False):
         if self._db is not None:
@@ -77,9 +78,10 @@ class CachedKVFile(KVFileBase):
                 yield key, self.get(key)
 
     def flush(self):
-        self.db()._set_db_batch(
-            (k, v)
-            for k, v in self.cache.items()
-            if k in self.dirty
-        )
-        self.dirty.clear()
+        if self.dirty:
+            self.db()._set_db_batch(
+                (k, v)
+                for k, v in self.cache.items()
+                if k in self.dirty
+            )
+            self.dirty.clear()
